@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import axios from 'axios';
 
 const User = styled.div`
   border: black 1px solid;
@@ -12,6 +13,63 @@ function Usuario(props) {
   const [email, setEmail] = useState("");
   const [editar, setEditar] = useState(false);
 
+  const headers = {
+    headers: {
+       Authorization: "allan-rafael-conway"
+    }
+  }
+
+  const recebeUsuarioPorId = (id) => {
+    axios
+    .get(
+      `https://us-central1-labenu-apis.cloudfunctions.net/labenusers/users/${id}`, headers
+    )
+    .then((resposta)=>{
+      setUsuario(resposta.data)
+      console.log(resposta)
+      setEmail(resposta.data.email)
+    })
+    .catch((erro)=> {
+      console.log(erro.response.data.message)
+    })
+  }
+  const excluiUsuario = (id) => {
+    axios
+    .delete(
+      `https://us-central1-labenu-apis.cloudfunctions.net/labenusers/users/${id}`,
+    headers
+    )
+    .then(()=>{
+      props.recebeUsuarios()
+    })
+    .catch((erro)=>{
+      console.log(erro.response)
+    })
+  }
+
+
+  const editaUsuario = () => {
+    const novoUsuario ={
+      name: nome,
+      email: email
+    }
+    axios.put(
+      `https://us-central1-labenu-apis.cloudfunctions.net/labenusers/users/${usuario.id}`,
+    novoUsuario,
+    headers
+    )
+    .then((resposta)=>{
+      console.log(resposta)
+      recebeUsuarioPorId(usuario.id)
+      setEditar(false);
+    })
+    .catch((erro)=>{
+      console.log(erro.response.data.message)
+    })
+  }
+  useEffect(()=>{
+    recebeUsuarioPorId(usuario.id)
+  }, [])
   return (
     <User>
       {editar ? (
@@ -20,7 +78,7 @@ function Usuario(props) {
           <p>E-mail:{usuario.email}</p>
           <input value={nome} onChange={(e) => setNome(e.target.value)} />
           <input value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button>Enviar alterações</button>
+          <button onClick={editaUsuario}>Enviar alterações</button>
         </div>
       ) : (
         <>
@@ -29,7 +87,7 @@ function Usuario(props) {
         </>
       )}
       <button onClick={() => setEditar(!editar)}>Editar</button>
-      <button>Excluir</button>
+      <button onClick={()=>excluiUsuario(usuario.id)}>Excluir</button>
     </User>
   );
 }
